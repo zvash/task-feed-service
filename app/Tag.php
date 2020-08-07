@@ -9,6 +9,8 @@ class Tag extends Model
 
     protected $fillable = ['name', 'display_name'];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     /**
      * @param string $name
      * @param string|null $displayName
@@ -45,5 +47,13 @@ class Tag extends Model
     public function tasks()
     {
         return $this->belongsToMany(Task::class, 'tag_task');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_tags');
     }
 }

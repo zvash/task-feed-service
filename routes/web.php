@@ -24,12 +24,12 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
     $router->group(['namespace' => 'Api\V1'], function ($router) {
 
-        $router->post('upload', 'TaskController@upload');
 
         $router->group(['middleware' => 'auth'], function ($router) {
 
-//            $router->get('tasks/create', 'TaskController@create');
             $router->get('categories/{categoryId}/tasks', 'CategoryController@tasks');
+
+            $router->get('groups/{groupId}/tasks', 'GroupController@getTasks');
 
         });
 
@@ -39,6 +39,11 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
             $router->post('tasks/create', 'TaskController@create');
 
             $router->post('categories/create', 'CategoryController@create');
+
+            $router->post('groups/create', 'GroupController@create');
+            $router->post('groups/{groupId}/tags/reset', 'GroupController@resetTags');
+            $router->post('groups/{groupId}/tags/add', 'GroupController@addTags');
+            $router->post('groups/{groupId}/tags/remove', 'GroupController@removeTags');
 
             $router->get('tags/all', 'TagController@getAll');
             $router->post('tags/create', 'TagController@create');

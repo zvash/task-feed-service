@@ -10,7 +10,7 @@
         "guzzlehttp/guzzle": "^6.0",
         "irazasyed/larasupport": "^1.0",
         "laravel/lumen-framework": "^7.0",
-        "pragmarx/countries-laravel": "^0.7.0"
+        "rinvex/countries": "^7.3"
     },
     "require-dev": {
         "fzaninotto/faker": "^1.9.1",

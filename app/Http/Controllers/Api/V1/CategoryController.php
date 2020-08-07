@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Category;
 use App\Task;
+use App\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
@@ -18,8 +18,9 @@ class CategoryController extends Controller
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'unique:categories'],
+            'name' => 'required|string',
             'image' => 'mimes:jpeg,jpg,png',
+            'is_main' => 'boolean',
             'parent_id' => 'integer|min:1|exists:categories,id'
         ]);
 
@@ -29,7 +30,7 @@ class CategoryController extends Controller
         $name = $request->get('name');
         $path = null;
         if ($request->hasFile('image')) {
-            $publicImagesPath = rtrim(env('PUBLIC_IMAGES_PATH', 'public/images'), '/') . '/';
+            $publicImagesPath = rtrim(env('PUBLIC_IMAGES_PATH', 'public/images'), '/');
             $file = $request->file('image');
             $path = preg_replace(
                 '#public/#',
@@ -38,7 +39,8 @@ class CategoryController extends Controller
             );
         }
         $parentId = $request->exists('parent_id') ? $request->get('parent_id') : 1;
-        $category = Category::makeCategory($name, $parentId, $path);
+        $isMain = $request->exists('is_main') ? $request->get('is_main') : false;
+        $category = Category::makeCategory($name, $parentId, $path, $isMain);
         return response(['message' => 'success', 'errors' => null, 'status' => true, 'data' => $category], 200);
     }
 

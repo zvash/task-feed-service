@@ -7,19 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    protected $fillable = ['name', 'image'];
+    protected $fillable = ['name', 'image', 'is_main'];
+
+    protected $hidden = ['created_at', 'updated_at'];
 
     /**
      * @param string $name
      * @param int $parentId
      * @param string|null $image
+     * @param bool $isMain
      * @return bool
      */
-    public static function makeCategory(string $name, int $parentId = 1, string $image = null)
+    public static function makeCategory(string $name, int $parentId = 1, string $image = null, bool $isMain = false)
     {
         try {
             DB::beginTransaction();
-            $category = Category::create(['name' => $name, 'image' => $image]);
+            $category = Category::create(['name' => $name, 'image' => $image, 'is_main' => $isMain]);
             $ascendantIds = CategoryHierarchy::where('child_id', $parentId)->pluck('parent_id')->toArray();
             $ascendantIds[] = $parentId;
             $rows = [];

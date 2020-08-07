@@ -26,6 +26,8 @@ class Task extends Model
         'token',
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     /**
      * @param int $length
      * @return string
