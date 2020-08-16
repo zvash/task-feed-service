@@ -62,6 +62,7 @@ $app->singleton(
 
 $app->configure('app');
 $app->configure('filesystems');
+$app->configure('cors');
 
 //class_alias('Illuminate\Support\Facades\Storage', 'Storage');
 
@@ -76,9 +77,9 @@ $app->configure('filesystems');
 |
 */
 
-// $app->middleware([
-//     App\Http\Middleware\ExampleMiddleware::class
-// ]);
+$app->middleware([
+    Fruitcake\Cors\HandleCors::class,
+]);
 
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
@@ -101,6 +102,7 @@ $app->register(App\Providers\AuthServiceProvider::class);
 $app->register(App\Providers\EventServiceProvider::class);
 $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(Irazasyed\Larasupport\Providers\ArtisanServiceProvider::class);
+$app->register(Fruitcake\Cors\CorsServiceProvider::class);
 
 $app->singleton(
     Illuminate\Contracts\Filesystem\Factory::class,
