@@ -16,6 +16,7 @@ class CreateTasksTable extends Migration
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('category_id')->index();
+            $table->unsignedBigInteger('offer_id')->index();
             $table->string('title')->index();
             $table->string('currency')->index();
             $table->double('original_price');

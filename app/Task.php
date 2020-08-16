@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +12,7 @@ class Task extends Model
     protected $fillable = [
         'title',
         'category_id',
+        'offer_id',
         'currency',
         'original_price',
         'payable_price',
@@ -63,5 +65,14 @@ class Task extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'tag_task');
+    }
+
+    /**
+     * @param string $value
+     * @return bool|string
+     */
+    public function getDestinationUrlAttribute(string $value)
+    {
+        return base64_decode($value);
     }
 }

@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Services\AffiliateService;
 use App\Tag;
 use App\Task;
 use App\TaskImage;
+use App\Traits\ResponseMaker;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +16,8 @@ use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
 {
+
+    use ResponseMaker;
 
     /**
      * @param Request $request
@@ -24,15 +29,16 @@ class TaskController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'category_id' => 'required|integer|exists:categories,id',
+            'offer_id' => 'required|integer|min:1',
             'currency' => 'required|string',
             'original_price' => 'required|numeric|min:0',
             'payable_price' => 'required|numeric|min:0',
             'has_shipment' => 'required|boolean',
             'shipment_price' => 'required|numeric:min:0',
-            'destination_url' => 'required|url',
             'coupon_code' => 'string',
             'expires_at' => 'date_format:Y-m-d|after:today',
             'description' => 'string',
+            'destination_url' => 'required|url',
             'coin_reward' => 'required|integer|min:0',
             'custom_attributes' => 'json',
             'images' => 'array|min:1',
@@ -47,6 +53,7 @@ class TaskController extends Controller
 
         $inputs = $request->all();
         $inputs['token'] = Task::generateToken();
+        $inputs['destination_url'] = base64_encode($inputs['destination_url']);
 
         try {
             DB::beginTransaction();
@@ -89,6 +96,32 @@ class TaskController extends Controller
                 400
             );
         }
+
+    }
+
+    /**
+     * @param Request $request
+     * @param int $taskId
+     * @param AffiliateService $affiliateService
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function getLandingUrl(Request $request, int $taskId, AffiliateService $affiliateService)
+    {
+        $user = Auth::user();
+        if ($user) {
+            $task = Task::find($taskId);
+            if ($task) {
+                $response = $affiliateService->registerClick($taskId->id, $user->id, $task->offer_id);
+                if ($response['status'] == 200) {
+                    $parameter = $response['data']['query_param'];
+                    $url = add_query_param_to_url($task->destination_url, $parameter);
+                    return $this->success(['landing_url' => $url]);
+                }
+                return $this->failData($response['data'], $response['status']);
+            }
+            return $this->failMessage('Content not found.', 404);
+        }
+        return $this->failMessage('Content not found.', 404);
 
     }
 }

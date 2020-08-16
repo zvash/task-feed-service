@@ -31,6 +31,8 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
             $router->get('groups/{groupId}/tasks', 'GroupController@getTasks');
 
+            $router->get('tasks/{taskId}/landing', 'TaskController@getLandingUrl');
+
         });
 
 
