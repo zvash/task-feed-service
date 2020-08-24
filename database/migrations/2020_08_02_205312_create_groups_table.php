@@ -16,7 +16,9 @@ class CreateGroupsTable extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
             $table->string('name')->index()->unique();
+            $table->string('type')->index()->default('tasks');
             $table->boolean('is_active')->index()->default(false);
+            $table->unsignedInteger('order')->index()->default(1);
             $table->timestamps();
         });
     }

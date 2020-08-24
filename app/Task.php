@@ -13,17 +13,13 @@ class Task extends Model
         'title',
         'category_id',
         'offer_id',
-        'currency',
-        'original_price',
-        'payable_price',
-        'has_shipment',
-        'shipment_price',
         'destination_url',
         'coupon_code',
         'expires_at',
         'description',
         'coin_reward',
         'custom_attributes',
+        'store',
         'image',
         'token',
     ];
@@ -65,6 +61,28 @@ class Task extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'tag_task');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function countries()
+    {
+        return $this->belongsToMany(Country::class, 'country_tasks')->withPivot([
+            'currency',
+            'original_price',
+            'payable_price',
+            'has_shipment',
+            'shipment_price'
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function prices()
+    {
+        return $this->hasMany(CountryTask::class, 'task_id', 'id');
     }
 
     /**

@@ -24,6 +24,7 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
     $router->group(['namespace' => 'Api\V1'], function ($router) {
 
+        $router->get('groups/index', 'GroupController@getActiveGroups');
 
         $router->group(['middleware' => 'auth'], function ($router) {
 

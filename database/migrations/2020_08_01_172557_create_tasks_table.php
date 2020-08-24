@@ -18,11 +18,7 @@ class CreateTasksTable extends Migration
             $table->unsignedBigInteger('category_id')->index();
             $table->unsignedBigInteger('offer_id')->index();
             $table->string('title')->index();
-            $table->string('currency')->index();
-            $table->double('original_price');
-            $table->double('payable_price');
-            $table->boolean('has_shipment');
-            $table->double('shipment_price');
+            $table->string('store')->index();
             $table->string('destination_url');
             $table->string('coupon_code')->nullable();
             $table->timestamp('expires_at')->index()->nullable();
@@ -31,6 +27,7 @@ class CreateTasksTable extends Migration
             $table->json('custom_attributes')->nullable();
             $table->string('token')->unique();
             $table->timestamps();
+
             $table->foreign('category_id')
                 ->references('id')
                 ->on('categories')

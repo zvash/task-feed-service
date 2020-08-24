@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Services\AffiliateService;
 use App\Tag;
 use App\Task;
+use App\Country;
 use App\TaskImage;
-use App\Traits\ResponseMaker;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Traits\ResponseMaker;
+use App\Services\AffiliateService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Exceptions\ServiceException;
 use Illuminate\Support\Facades\Storage;
+use App\Repositories\CountryRepository;
 use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
@@ -21,82 +24,36 @@ class TaskController extends Controller
 
     /**
      * @param Request $request
+     * @param CountryRepository $countryRepository
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
-    public function create(Request $request)
+    public function create(Request $request, CountryRepository $countryRepository)
     {
-
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'category_id' => 'required|integer|exists:categories,id',
-            'offer_id' => 'required|integer|min:1',
-            'currency' => 'required|string',
-            'original_price' => 'required|numeric|min:0',
-            'payable_price' => 'required|numeric|min:0',
-            'has_shipment' => 'required|boolean',
-            'shipment_price' => 'required|numeric:min:0',
-            'coupon_code' => 'string',
-            'expires_at' => 'date_format:Y-m-d|after:today',
-            'description' => 'string',
-            'destination_url' => 'required|url',
-            'coin_reward' => 'required|integer|min:0',
-            'custom_attributes' => 'json',
-            'images' => 'array|min:1',
-            'images.*' => 'mimes:jpeg,jpg,png',
-            'tags' => 'array|min:1',
-            'tags.*' => 'string|distinct'
-        ]);
-
-        if ($validator->fails()) {
-            return response(['message' => 'Validation errors', 'errors' => $validator->errors(), 'status' => false], 422);
+        try {
+            $this->validateTaskCreationRequest($request, $countryRepository);
+        } catch (ServiceException $e) {
+            return $this->failValidation($e->getData());
         }
-
         $inputs = $request->all();
         $inputs['token'] = Task::generateToken();
         $inputs['destination_url'] = base64_encode($inputs['destination_url']);
 
         try {
             DB::beginTransaction();
+
             $task = Task::create($inputs);
-            $publicImagesPath = rtrim(env('PUBLIC_IMAGES_PATH', 'public/images'), '/') . '/';
-            if ($request->hasFile('images')) {
-                $files = $request->file('images');
-                foreach ($files as $file) {
-                    $path = preg_replace(
-                        '#public/#',
-                        'storage/',
-                        Storage::putFile($publicImagesPath, $file)
-                    );
-                    $taskImage = ['task_id' => $task->id, 'url' => $path];
-                    TaskImage::create($taskImage);
-                }
-            }
-            if ($request->exists('tags')) {
-                $tags = $request->get('tags');
-                $tagIds = [];
-                foreach ($tags as $tagName) {
-                    $tag = Tag::makeTag($tagName);
-                    $tagIds[] = $tag->id;
-                }
-                if ($tagIds) {
-                    $task->tags()->attach($tagIds);
-                }
-            }
+
+            $this->storeTaskImages($request, $task);
+            $this->attachTags($request, $task);
+            $this->attachPrices($request, $task, $countryRepository);
+
             DB::commit();
-            return response(['message' => 'success', 'errors' => null, 'status' => true, 'data' => $task], 200);
+            return $this->success($task);
+
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response(
-                [
-                    'message' => 'failed',
-                    'errors' => ['exception' => $exception->getMessage()],
-                    'status' => false,
-                    'data' => []
-                ],
-                400
-            );
+            return $this->failMessage($exception->getMessage(), 400);
         }
-
     }
 
     /**
@@ -123,5 +80,112 @@ class TaskController extends Controller
         }
         return $this->failMessage('Content not found.', 404);
 
+    }
+
+    /**
+     * @param CountryRepository $countryRepository
+     * @param Request $request
+     * @throws ServiceException
+     * @return void
+     */
+    private function validateTaskCreationRequest(Request $request, CountryRepository $countryRepository)
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string',
+            'category_id' => 'required|integer|exists:categories,id',
+            'offer_id' => 'required|integer|min:1',
+            'store' => 'required|string',
+            'prices' => 'required|array|filled',
+            'prices.*.country' => 'required|string|in:' . $countryRepository->getAllNameVariationsAsString(),
+            'prices.*.currency' => 'required|string|in:' . $countryRepository->getAllCurrenciesAsString(),
+            'prices.*.original_price' => 'numeric|min:0',
+            'prices.*.payable_price' => 'required|numeric|min:0',
+            'prices.*.has_shipment' => 'required|boolean',
+            'prices.*.shipment_price' => 'numeric|min:0|required_if:prices.*.has_shipment,1',
+            'coupon_code' => 'string',
+            'expires_at' => 'date_format:Y-m-d|after:today',
+            'description' => 'string',
+            'destination_url' => 'required|url',
+            'coin_reward' => 'required|integer|min:0',
+            'custom_attributes' => 'json',
+            'images' => 'array|min:1',
+            'images.*' => 'mimes:jpeg,jpg,png',
+            'tags' => 'array|min:1',
+            'tags.*' => 'string|distinct',
+        ]);
+
+        if ($validator->fails()) {
+            throw new ServiceException('Validation Error.', $validator->errors()->toArray());
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param Task $task
+     */
+    private function attachTags(Request $request, Task $task)
+    {
+        if ($request->exists('tags')) {
+            $tags = $request->get('tags');
+            $tagIds = [];
+            foreach ($tags as $tagName) {
+                $tag = Tag::makeTag($tagName);
+                $tagIds[] = $tag->id;
+            }
+            if ($tagIds) {
+                $task->tags()->attach($tagIds);
+            }
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param Task $task
+     * @param CountryRepository $countryRepository
+     */
+    private function attachPrices(Request $request, Task $task, CountryRepository $countryRepository)
+    {
+        if ($request->exists('prices')) {
+            $prices = $request->get('prices');
+            $allCountries = Country::all()->pluck('id', 'name')->toArray();
+            $pricesByCountryId = [];
+            foreach ($prices as $price) {
+                $country = $countryRepository->getCountry($price['country']);
+                $countryName = $country['name'];
+                $countryId = $allCountries[$countryName];
+                $pricesByCountryId[$countryId] = [
+                    'currency' => $price['currency'],
+                    'payable_price' => $price['payable_price'],
+                    'original_price' => $price['original_price'] ?? $price['payable_price'],
+                    'has_shipment' => $price['has_shipment'],
+                    'shipment_price' => $price['has_shipment'] ? $price['shipment_price'] : 0
+                ];
+            }
+
+            if ($pricesByCountryId) {
+                $task->countries()->attach($pricesByCountryId);
+            }
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param Task $task
+     */
+    private function storeTaskImages(Request $request, Task $task): void
+    {
+        $publicImagesPath = rtrim(env('PUBLIC_IMAGES_PATH', 'public/images'), '/') . '/';
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
+            foreach ($files as $file) {
+                $path = preg_replace(
+                    '#public/#',
+                    'storage/',
+                    Storage::putFile($publicImagesPath, $file)
+                );
+                $taskImage = ['task_id' => $task->id, 'url' => $path];
+                TaskImage::create($taskImage);
+            }
+        }
     }
 }

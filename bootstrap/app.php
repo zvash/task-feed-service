@@ -63,6 +63,7 @@ $app->singleton(
 $app->configure('app');
 $app->configure('filesystems');
 $app->configure('cors');
+$app->configure('countries');
 
 //class_alias('Illuminate\Support\Facades\Storage', 'Storage');
 
