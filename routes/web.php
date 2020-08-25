@@ -24,13 +24,15 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
     $router->group(['namespace' => 'Api\V1'], function ($router) {
 
-        $router->get('groups/index', 'GroupController@getActiveGroups');
+        $router->get('groups/active', 'GroupController@getActiveGroups');
+
+        $router->get('categories/main', 'CategoryController@getMain');
+
+        $router->get('categories/{categoryId}/tasks', 'CategoryController@tasks');
+
+        $router->get('groups/{groupId}/items', 'GroupController@getItems');
 
         $router->group(['middleware' => 'auth'], function ($router) {
-
-            $router->get('categories/{categoryId}/tasks', 'CategoryController@tasks');
-
-            $router->get('groups/{groupId}/tasks', 'GroupController@getTasks');
 
             $router->get('tasks/{taskId}/landing', 'TaskController@getLandingUrl');
 

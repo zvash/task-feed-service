@@ -7,7 +7,9 @@ use App\Exceptions\GroupNotFoundException;
 use App\Task;
 use App\Group;
 use App\TagTask;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class GroupRepository
 {
@@ -85,6 +87,37 @@ class GroupRepository
 
         }
         return [];
+    }
+
+    /**
+     * @param Group $group
+     * @param int $paginate
+     * @return LengthAwarePaginator|Builder[]|Collection
+     */
+    public function getGroupItems(Group $group, int $paginate = 0)
+    {
+        $tagIds = $group->tags->pluck('id')->toArray();
+        if ($group->type == 'tasks') {
+            $taskIds = TagTask::whereIn('tag_id', $tagIds)
+                ->pluck('task_id')
+                ->unique()
+                ->toArray();
+
+            $query = Task::query();
+            $query->whereIn('id', $taskIds)
+                ->with('images')
+                ->where('expires_at', '>', date('Y-m-d'));
+
+            $query = $this->addTaskCurrenciesWhereClause($query);
+            $query = $this->addTaskCountriesWhereClause($query);
+            $query = $this->includePrices($query);
+
+            if ($paginate) {
+                return $query->paginate($paginate);
+            } else {
+                return $query->get();
+            }
+        }
     }
 
     /**

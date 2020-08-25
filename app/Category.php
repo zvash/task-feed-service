@@ -92,4 +92,16 @@ class Category extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    /**
+     * @param $value
+     * @return string
+     */
+    public function getImageAttribute($value)
+    {
+        if ($value) {
+            return rtrim(env('APP_URL'), '/') . '/' . $value;
+        }
+        return $value;
+    }
 }

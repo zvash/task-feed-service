@@ -68,7 +68,7 @@ class TaskController extends Controller
         if ($user) {
             $task = Task::find($taskId);
             if ($task) {
-                $response = $affiliateService->registerClick($taskId->id, $user->id, $task->offer_id);
+                $response = $affiliateService->registerClick($task->id, $user->id, $task->offer_id);
                 if ($response['status'] == 200) {
                     $parameter = $response['data']['query_param'];
                     $url = add_query_param_to_url($task->destination_url, $parameter);

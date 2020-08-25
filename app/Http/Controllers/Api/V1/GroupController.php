@@ -114,25 +114,19 @@ class GroupController extends Controller
     /**
      * @param Request $request
      * @param int $groupId
+     * @param GroupRepository $groupRepository
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
-    public function getTasks(Request $request, int $groupId)
+    public function getItems(Request $request, int $groupId, GroupRepository $groupRepository)
     {
+        $user = Auth::user();
+        if ($user) {
+            $groupRepository->setCountries([$user->country]);
+        }
         $group = Group::find($groupId);
         if ($group) {
 
-            $tagIds = $group->tags->pluck('id')->toArray();
-
-            $taskIds = TagTask::whereIn('tag_id', $tagIds)
-                ->pluck('task_id')
-                ->unique()
-                ->toArray();
-
-            $tasks = Task::whereIn('id', $taskIds)
-                ->with('images')
-                ->where('expires_at', '<=', date('Y-m-d'))
-                ->get()
-                ->toArray();
+            $tasks = $groupRepository->getGroupItems($group, 10);
 
             return $this->success($tasks);
         }
