@@ -93,4 +93,16 @@ class Task extends Model
     {
         return base64_decode($value);
     }
+
+    /**
+     * @param string $value
+     * @return mixed|string
+     */
+    public function getCustomAttributesAttribute(string $value)
+    {
+        if (!$value) {
+            return $value;
+        }
+        return json_decode($value);
+    }
 }
