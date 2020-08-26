@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Tag;
+use App\Traits\ResponseMaker;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
 class TagController extends Controller
 {
+
+    use ResponseMaker;
 
     /**
      * @param Request $request
@@ -33,7 +36,7 @@ class TagController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response(['message' => 'Validation errors', 'errors' => $validator->errors(), 'status' => false], 422);
+            return $this->failValidation($validator->errors());
         }
         $name = $request->get('name');
         $displayName = $request->exists('display_name') ?
@@ -58,7 +61,7 @@ class TagController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response(['message' => 'Validation errors', 'errors' => $validator->errors(), 'status' => false], 422);
+            return $this->failValidation($validator->errors());
         }
         $input = $request->all();
         $tags = [];
