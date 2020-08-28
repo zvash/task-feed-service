@@ -17,6 +17,7 @@ class CreateCategoriesTable extends Migration
             $table->id();
             $table->string('name')->index();
             $table->string('image')->nullable();
+            $table->string('svg')->nullable();
             $table->boolean('is_main')->index()->default(false);
             $table->timestamps();
         });

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    protected $fillable = ['name', 'image', 'is_main'];
+    protected $fillable = ['name', 'image', 'svg', 'is_main'];
 
     protected $hidden = ['created_at', 'updated_at'];
 
@@ -15,14 +15,15 @@ class Category extends Model
      * @param string $name
      * @param int $parentId
      * @param string|null $image
+     * @param string|null $svg
      * @param bool $isMain
      * @return bool
      */
-    public static function makeCategory(string $name, int $parentId = 1, string $image = null, bool $isMain = false)
+    public static function makeCategory(string $name, int $parentId = 1, string $image = null, string $svg = null, bool $isMain = false)
     {
         try {
             DB::beginTransaction();
-            $category = Category::create(['name' => $name, 'image' => $image, 'is_main' => $isMain]);
+            $category = Category::create(['name' => $name, 'image' => $image, 'svg' => $svg, 'is_main' => $isMain]);
             $ascendantIds = CategoryHierarchy::where('child_id', $parentId)->pluck('parent_id')->toArray();
             $ascendantIds[] = $parentId;
             $rows = [];
@@ -98,6 +99,18 @@ class Category extends Model
      * @return string
      */
     public function getImageAttribute($value)
+    {
+        if ($value) {
+            return rtrim(env('APP_URL'), '/') . '/' . $value;
+        }
+        return $value;
+    }
+
+    /**
+     * @param $value
+     * @return string
+     */
+    public function getSvgAttribute($value)
     {
         if ($value) {
             return rtrim(env('APP_URL'), '/') . '/' . $value;

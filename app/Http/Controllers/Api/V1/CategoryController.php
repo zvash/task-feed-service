@@ -25,6 +25,7 @@ class CategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'image' => 'mimes:jpeg,jpg,png',
+            'svg' => 'mimes:svg',
             'is_main' => 'boolean',
             'parent_id' => 'integer|min:1|exists:categories,id'
         ]);
@@ -33,19 +34,11 @@ class CategoryController extends Controller
             return response(['message' => 'Validation errors', 'errors' => $validator->errors(), 'status' => false], 422);
         }
         $name = $request->get('name');
-        $path = null;
-        if ($request->hasFile('image')) {
-            $publicImagesPath = rtrim(env('PUBLIC_IMAGES_PATH', 'public/images'), '/');
-            $file = $request->file('image');
-            $path = preg_replace(
-                '#public/#',
-                'storage/',
-                Storage::putFile($publicImagesPath, $file)
-            );
-        }
+        $path = $this->saveImage($request, 'image');
+        $svgPath = $this->saveImage($request, 'svg');
         $parentId = $request->exists('parent_id') ? $request->get('parent_id') : 1;
         $isMain = $request->exists('is_main') ? $request->get('is_main') : false;
-        $category = Category::makeCategory($name, $parentId, $path, $isMain);
+        $category = Category::makeCategory($name, $parentId, $path, $svgPath, $isMain);
         return response(['message' => 'success', 'errors' => null, 'status' => true, 'data' => $category], 200);
     }
 
@@ -83,5 +76,25 @@ class CategoryController extends Controller
         }
         $categories = $categoryRepository->getAllMainCategories();
         return $this->success($categories);
+    }
+
+    /**
+     * @param Request $request
+     * @param string $key
+     * @return string
+     */
+    private function saveImage(Request $request, string $key): string
+    {
+        $path = null;
+        if ($request->hasFile($key)) {
+            $publicImagesPath = rtrim(env('PUBLIC_IMAGES_PATH', 'public/images'), '/');
+            $file = $request->file($key);
+            $path = preg_replace(
+                '#public/#',
+                'storage/',
+                Storage::putFile($publicImagesPath, $file)
+            );
+        }
+        return $path;
     }
 }
