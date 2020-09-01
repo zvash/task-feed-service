@@ -55,6 +55,19 @@ class CategoryRepository
     }
 
     /**
+     * @param int $parentId
+     * @return Builder[]|Collection
+     */
+    public function getSubCategories(int $parentId)
+    {
+        $query = Category::query();
+        $query = $query->where('parent_id', $parentId);
+        $query = $this->hasCurrencies($query);
+        $query = $this->hasCountries($query);
+        return $query->get();
+    }
+
+    /**
      * @param Category $category
      * @param int $paginate
      * @return LengthAwarePaginator|Builder[]|Collection

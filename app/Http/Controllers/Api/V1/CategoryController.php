@@ -44,6 +44,25 @@ class CategoryController extends Controller
 
     /**
      * @param Request $request
+     * @param int $parentId
+     * @param CategoryRepository $categoryRepository
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function getSubCategories(Request $request, int $parentId, CategoryRepository $categoryRepository)
+    {
+        $user = Auth::user();
+        if ($user) {
+            $categoryRepository->setCountries([$user->country]);
+        }
+        $categories = $categoryRepository->getSubCategories($parentId);
+        if ($categories) {
+            return $this->success($categories);
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
+
+    /**
+     * @param Request $request
      * @param int $categoryId
      * @param CategoryRepository $categoryRepository
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory

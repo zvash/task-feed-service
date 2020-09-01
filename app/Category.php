@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    protected $fillable = ['name', 'image', 'svg', 'is_main'];
+    protected $fillable = ['name', 'parent_id', 'image', 'svg', 'is_main'];
 
     protected $hidden = ['created_at', 'updated_at'];
 
@@ -23,7 +23,7 @@ class Category extends Model
     {
         try {
             DB::beginTransaction();
-            $category = Category::create(['name' => $name, 'image' => $image, 'svg' => $svg, 'is_main' => $isMain]);
+            $category = Category::create(['name' => $name, 'parent_id' => $parentId, 'image' => $image, 'svg' => $svg, 'is_main' => $isMain]);
             $ascendantIds = CategoryHierarchy::where('child_id', $parentId)->pluck('parent_id')->toArray();
             $ascendantIds[] = $parentId;
             $rows = [];
@@ -37,6 +37,22 @@ class Category extends Model
             DB::rollBack();
             return false;
         }
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function subCategories()
+    {
+        return $this->hasMany(Category::class, 'parent_id', 'id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Category::class, 'parent_id', 'id');
     }
 
     /**
