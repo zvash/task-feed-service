@@ -18,4 +18,16 @@ class TaskImage extends Model
     {
         return $this->belongsTo(Task::class);
     }
+
+    /**
+     * @param $value
+     * @return string
+     */
+    public function getUrlAttribute($value)
+    {
+        if ($value) {
+            return rtrim(env('APP_URL'), '/') . '/' . $value;
+        }
+        return $value;
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Repositories\TaskRepository;
 use App\Tag;
 use App\Task;
 use App\Country;
@@ -48,12 +49,32 @@ class TaskController extends Controller
             $this->attachPrices($request, $task, $countryRepository);
 
             DB::commit();
-            return $this->success($task);
+            return $this->success($task->load('images'));
 
         } catch (\Exception $exception) {
             DB::rollBack();
             return $this->failMessage($exception->getMessage(), 400);
         }
+    }
+
+    /**
+     * @param Request $request
+     * @param int $taskId
+     * @param TaskRepository $taskRepository
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function get(Request $request, int $taskId, TaskRepository $taskRepository)
+    {
+        $user = Auth::user();
+        if ($user) {
+            $taskRepository->setCountries([$user->country]);
+        }
+        $task = $taskRepository->getTask($taskId);
+        if ($task) {
+            return $this->success($task);
+        }
+
+        return $this->failMessage('Content not found.', 404);
     }
 
     /**
@@ -174,7 +195,7 @@ class TaskController extends Controller
      */
     private function storeTaskImages(Request $request, Task $task): void
     {
-        $publicImagesPath = rtrim(env('PUBLIC_IMAGES_PATH', 'public/images'), '/') . '/';
+        $publicImagesPath = rtrim(env('PUBLIC_IMAGES_PATH', 'public/images'), '/');
         if ($request->hasFile('images')) {
             $files = $request->file('images');
             foreach ($files as $file) {
