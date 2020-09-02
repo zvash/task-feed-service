@@ -104,6 +104,46 @@ class TaskController extends Controller
     }
 
     /**
+     * @param Request $request
+     * @param int $taskId
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function getTags(Request $request, int $taskId)
+    {
+        $task = Task::find($taskId);
+        if ($task) {
+            $tags = $task->tags;
+            return $this->success($tags);
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
+
+    /**
+     * @param Request $request
+     * @param int $taskId
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function resetTags(Request $request, int $taskId)
+    {
+        $validator = Validator::make($request->all(), [
+            'tags' => 'required|array|min:1',
+            'tags.*' => 'int|exists:tags,id',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->failValidation($validator->errors());
+        }
+
+
+        $task = Task::find($taskId);
+        if ($task) {
+            $task->tags()->sync($request->get('tags'));
+            return $this->success($task->load('tags'));
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
+
+    /**
      * @param CountryRepository $countryRepository
      * @param Request $request
      * @throws ServiceException

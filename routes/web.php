@@ -46,6 +46,8 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
         $router->group(['middleware' => 'admin'], function ($router) {
 
             $router->post('tasks/create', 'TaskController@create');
+            $router->get('tasks/{taskId}/tags', 'TaskController@getTags');
+            $router->post('tasks/{taskId}/tags/reset', 'TaskController@resetTags');
 
             $router->post('categories/create', 'CategoryController@create');
 
