@@ -147,7 +147,6 @@ class TaskController extends Controller
 
     /**
      * @param Request $request
-     * @param string $query
      * @param SearchRepository $searchRepository
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
