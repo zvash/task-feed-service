@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Repositories\SearchRepository;
 use App\Repositories\TaskRepository;
 use App\Tag;
 use App\Task;
@@ -141,6 +142,36 @@ class TaskController extends Controller
             return $this->success($task->load('tags'));
         }
         return $this->failMessage('Content not found.', 404);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param string $query
+     * @param SearchRepository $searchRepository
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function searchByText(Request $request, string $query, SearchRepository $searchRepository)
+    {
+        $query = urldecode($query);
+        $data['query'] = $query;
+        $validator = Validator::make($data, [
+            'query' => 'required|filled|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->failValidation($validator->errors());
+        }
+
+        $user = Auth::user();
+        if ($user) {
+            $searchRepository->setCountries([$user->country]);
+        }
+
+        $tasks = $searchRepository->searchTasksByText($query, 10);
+
+        return $this->success($tasks);
+
     }
 
     /**

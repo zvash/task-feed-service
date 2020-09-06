@@ -2,14 +2,14 @@
 
 namespace App\Repositories;
 
-use App\Country;
-use App\Exceptions\GroupNotFoundException;
 use App\Task;
 use App\Group;
+use App\Country;
 use App\TagTask;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use App\Exceptions\GroupNotFoundException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class GroupRepository
 {
@@ -44,6 +44,10 @@ class GroupRepository
         return $this;
     }
 
+    public function reorder(array $orders)
+    {
+        $groupIds = array_keys($orders);
+    }
 
     /**
      * @param int $groupId

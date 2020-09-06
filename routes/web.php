@@ -36,6 +36,8 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
         $router->get('tasks/{taskId}/get', 'TaskController@get');
 
+        $router->get('tasks/search/{query}', 'TaskController@searchByText');
+
         $router->group(['middleware' => 'auth'], function ($router) {
 
             $router->get('tasks/{taskId}/landing', 'TaskController@getLandingUrl');
@@ -55,6 +57,8 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
             $router->post('groups/{groupId}/tags/reset', 'GroupController@resetTags');
             $router->post('groups/{groupId}/tags/add', 'GroupController@addTags');
             $router->post('groups/{groupId}/tags/remove', 'GroupController@removeTags');
+            $router->post('groups/{groupId}/order/change', 'GroupController@changeOrder');
+            $router->post('groups/reorder', 'GroupController@reorder');
 
             $router->get('tags/all', 'TagController@getAll');
             $router->post('tags/create', 'TagController@create');
