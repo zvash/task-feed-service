@@ -36,7 +36,7 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
         $router->get('tasks/{taskId}/get', 'TaskController@get');
 
-        $router->get('tasks/search/{query}', 'TaskController@searchByText');
+        $router->get('tasks/search', 'TaskController@searchByText');
 
         $router->group(['middleware' => 'auth'], function ($router) {
 

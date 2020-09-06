@@ -151,9 +151,10 @@ class TaskController extends Controller
      * @param SearchRepository $searchRepository
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
-    public function searchByText(Request $request, string $query, SearchRepository $searchRepository)
+    public function searchByText(Request $request, SearchRepository $searchRepository)
     {
-        $query = urldecode($query);
+        $q = $request->get('q');
+        $query = urldecode($q);
         $data['query'] = $query;
         $validator = Validator::make($data, [
             'query' => 'required|filled|string'
