@@ -170,7 +170,7 @@ class TaskController extends Controller
 
         $tasks = $searchRepository->searchTasksByText($query, 10);
 
-        return $this->success($tasks);
+        return $this->success($tasks->appends(request()->except('page')));
 
     }
 
