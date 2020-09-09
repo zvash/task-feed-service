@@ -128,6 +128,8 @@ class GroupController extends Controller
         if ($group) {
 
             $tasks = $groupRepository->getGroupItems($group, 10);
+            $tasks = $tasks->toArray();
+            $tasks['parent_entity'] = $group->toArray();
 
             return $this->success($tasks);
         }
