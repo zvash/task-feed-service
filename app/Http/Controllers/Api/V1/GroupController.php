@@ -145,7 +145,7 @@ class GroupController extends Controller
         if ($user) {
             $groupRepository->setCountries([$user->country]);
         }
-        $groups = Group::where('is_active', true)->paginate(5)->toArray();
+        $groups = Group::where('is_active', true)->orderBy('order')->paginate(5)->toArray();
         if ($groups) {
             foreach ($groups['data'] as $index => $group) {
                 $type = $group['type'];
