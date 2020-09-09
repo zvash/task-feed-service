@@ -95,10 +95,10 @@ class Task extends Model
     }
 
     /**
-     * @param string $value
+     * @param string|null $value
      * @return mixed|string
      */
-    public function getCustomAttributesAttribute(string $value)
+    public function getCustomAttributesAttribute($value)
     {
         if (!$value) {
             return $value;
