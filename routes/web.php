@@ -58,7 +58,8 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
             $router->post('groups/{groupId}/tags/add', 'GroupController@addTags');
             $router->post('groups/{groupId}/tags/remove', 'GroupController@removeTags');
             $router->post('groups/{groupId}/order/change', 'GroupController@changeOrder');
-            $router->post('groups/reorder', 'GroupController@reorder');
+            $router->post('groups/{groupId}/order/move-to-top', 'GroupController@moveToTop');
+            $router->post('groups/order/reorder', 'GroupController@reorder');
 
             $router->get('tags/all', 'TagController@getAll');
             $router->post('tags/create', 'TagController@create');

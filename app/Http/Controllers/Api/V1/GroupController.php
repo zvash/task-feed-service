@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Traits\ResponseMaker;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class GroupController extends Controller
@@ -157,6 +158,28 @@ class GroupController extends Controller
                 $groups['data'][$index][$type] = $items;
             }
             return $this->success($groups);
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
+
+    /**
+     * @param Request $request
+     * @param int $groupId
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function moveToTop(Request $request, int $groupId)
+    {
+        $group = Group::find($groupId);
+        if ($group) {
+            $groupOrder = $group->order;
+            Group::where('id', '<>', $group->id)
+                ->where('order', '<=', $groupOrder)
+                ->update([
+                    'order' => DB::raw('`order` + 1')
+                ]);
+            $group->order = 1;
+            $group->save();
+            return $this->success($group);
         }
         return $this->failMessage('Content not found.', 404);
     }
