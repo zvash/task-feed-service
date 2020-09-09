@@ -27,6 +27,7 @@ class AffiliateService
         $this->headers = [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
+            'Service-Token' => env('AFFILIATE_MANAGEMENT_SERVICE_TOKEN', '')
         ];
         $this->client = new Client(
             [
