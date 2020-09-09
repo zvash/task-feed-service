@@ -14,7 +14,7 @@ class ChangeDestinationUrlTypeToTextInTasksTable extends Migration
     public function up()
     {
         Schema::table('tasks', function (Blueprint $table) {
-            $table->text('destination_url')->change();;
+            $table->text('destination_url')->change();
         });
     }
 
@@ -26,7 +26,7 @@ class ChangeDestinationUrlTypeToTextInTasksTable extends Migration
     public function down()
     {
         Schema::table('tasks', function (Blueprint $table) {
-            $table->string('destination_url')->change();;
+            $table->string('destination_url')->change();
         });
     }
 }
