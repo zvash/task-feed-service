@@ -38,7 +38,7 @@ class TaskController extends Controller
         }
         $inputs = $request->all();
         $inputs['token'] = Task::generateToken();
-        $inputs['destination_url'] = base64_encode($inputs['destination_url']);
+        //$inputs['destination_url'] = base64_encode($inputs['destination_url']);
 
         try {
             DB::beginTransaction();
@@ -197,7 +197,7 @@ class TaskController extends Controller
             'coupon_code' => 'string',
             'expires_at' => 'date_format:Y-m-d|after:today',
             'description' => 'string',
-            'destination_url' => 'required|url',
+            'destination_url' => 'required|string',
             'coin_reward' => 'required|integer|min:0',
             'custom_attributes' => 'json',
             'images' => 'array|min:1',
