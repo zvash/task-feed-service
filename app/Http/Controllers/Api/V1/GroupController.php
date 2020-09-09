@@ -129,7 +129,10 @@ class GroupController extends Controller
 
             $tasks = $groupRepository->getGroupItems($group, 10);
             $tasks = $tasks->toArray();
-            $tasks['parent_entity'] = $group->makeHidden('tags')->toArray();
+            $tasks['parent_entity'] = [
+                'id' => $group->id,
+                'name' => $group->name
+            ];
 
             return $this->success($tasks);
         }
