@@ -77,6 +77,12 @@ class CategoryController extends Controller
         $tasks = [];
         if ($category) {
             $tasks = $categoryRepository->getTasks($category, 10);
+            $tasks = $tasks->toArray();
+            $tasks['parent_entity'] = [
+                'id' => $category->id,
+                'name' => $category->name
+            ];
+
             return $this->success($tasks);
         }
         return $this->failMessage('Content not found.', 404);
