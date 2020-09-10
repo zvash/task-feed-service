@@ -106,9 +106,9 @@ class CategoryController extends Controller
     /**
      * @param Request $request
      * @param string $key
-     * @return string
+     * @return string|null
      */
-    private function saveImage(Request $request, string $key): string
+    private function saveImage(Request $request, string $key)
     {
         $path = null;
         if ($request->hasFile($key)) {
