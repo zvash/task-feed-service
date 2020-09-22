@@ -152,6 +152,10 @@ class TaskController extends Controller
      */
     public function searchByText(Request $request, SearchRepository $searchRepository)
     {
+        if ($request->has('filters')) {
+            $filters = $request->get('filters');
+            $searchRepository->setFilters($filters);
+        }
         $q = $request->get('q');
         $query = urldecode($q);
         $data['query'] = $query;
@@ -169,8 +173,10 @@ class TaskController extends Controller
         }
 
         $tasks = $searchRepository->searchTasksByText($query, 10);
-
-        return $this->success($tasks->appends(request()->except('page')));
+        $filterOptions = $searchRepository->filterOptions();
+        $tasks = ($tasks->appends(request()->except('page')))->toArray();
+        $tasks['filter_options'] = $filterOptions;
+        return $this->success($tasks);
 
     }
 

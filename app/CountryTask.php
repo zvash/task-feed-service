@@ -26,10 +26,13 @@ class CountryTask extends Model
     ];
 
     /**
-     * @return mixed
+     * @return mixed|null
      */
     public function getCountryNameAttribute()
     {
+        if (!$this->country_id) {
+            return null;
+        }
         $country = Country::find($this->country_id);
         return $country->name;
     }

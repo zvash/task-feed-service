@@ -32,11 +32,16 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
         $router->get('categories/{categoryId}/tasks', 'CategoryController@tasks');
 
+        $router->get('categories/{categoryId}/search', 'CategoryController@search');
+
         $router->get('groups/{groupId}/items', 'GroupController@getItems');
 
         $router->get('tasks/{taskId}/get', 'TaskController@get');
 
         $router->get('tasks/search', 'TaskController@searchByText');
+
+        $router->get('filters/actives', 'FilterController@getActives');
+
 
         $router->group(['middleware' => 'auth'], function ($router) {
 
@@ -64,6 +69,15 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
             $router->get('tags/all', 'TagController@getAll');
             $router->post('tags/create', 'TagController@create');
             $router->post('tags/bulk-create', 'TagController@createMultiple');
+
+            $router->post('filters/create', 'FilterController@create');
+            $router->post('filters/{filterId}/activate', 'FilterController@activate');
+            $router->post('filters/{filterId}/deactivate', 'FilterController@deactivate');
+            $router->get('filters/all', 'FilterController@getAll');
+            $router->get('filters/actives', 'FilterController@getActives');
+
+            $router->get('filterables/all', 'FilterableController@getAll');
+
         });
     });
 

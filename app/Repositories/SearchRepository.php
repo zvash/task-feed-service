@@ -6,10 +6,12 @@ namespace App\Repositories;
 use App\Tag;
 use App\Task;
 use App\Country;
+use App\Traits\TaskFilterApplier;
 use Illuminate\Database\Eloquent\Builder;
 
 class SearchRepository
 {
+    use TaskFilterApplier;
     /**
      * @var array $currencies
      */
@@ -19,6 +21,16 @@ class SearchRepository
      * @var array $countries
      */
     protected $countries = [];
+
+    /**
+     * @var Builder|null $lastQuery
+     */
+    protected $lastQuery = null;
+
+    /**
+     * @var array $filters
+     */
+    protected $filters = [];
 
     /**
      * @param array $currencies
@@ -37,6 +49,16 @@ class SearchRepository
     public function setCountries(array $countries)
     {
         $this->countries = $countries;
+        return $this;
+    }
+
+    /**
+     * @param array $filters
+     * @return SearchRepository
+     */
+    public function setFilters(array $filters)
+    {
+        $this->filters = $filters;
         return $this;
     }
 
@@ -67,6 +89,10 @@ class SearchRepository
         $query = $this->addTaskCurrenciesWhereClause($query);
         $query = $this->addTaskCountriesWhereClause($query);
         $query = $this->includePrices($query);
+
+        $this->lastQuery = $query;
+
+        $query = $this->applyFilters();
 
         if ($paginate) {
             return $query->paginate($paginate);

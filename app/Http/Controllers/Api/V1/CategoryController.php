@@ -69,6 +69,10 @@ class CategoryController extends Controller
      */
     public function tasks(Request $request, int $categoryId, CategoryRepository $categoryRepository)
     {
+        if ($request->has('filters')) {
+            $filters = $request->get('filters');
+            $categoryRepository->setFilters($filters);
+        }
         $user = Auth::user();
         if ($user) {
             $categoryRepository->setCountries([$user->country]);
@@ -77,7 +81,54 @@ class CategoryController extends Controller
         $tasks = [];
         if ($category) {
             $tasks = $categoryRepository->getTasks($category, 10);
-            $tasks = $tasks->toArray();
+            $filterOptions = $categoryRepository->filterOptions();
+            $tasks = ($tasks->appends(request()->except('page')))->toArray();
+            $tasks['filter_options'] = $filterOptions;
+            $tasks['parent_entity'] = [
+                'id' => $category->id,
+                'name' => $category->name
+            ];
+
+            return $this->success($tasks);
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
+
+    /**
+     * @param Request $request
+     * @param int $categoryId
+     * @param CategoryRepository $categoryRepository
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function search(Request $request, int $categoryId, CategoryRepository $categoryRepository)
+    {
+        if ($request->has('filters')) {
+            $filters = $request->get('filters');
+            $categoryRepository->setFilters($filters);
+        }
+
+        $q = $request->get('q');
+        $query = urldecode($q);
+        $data['query'] = $query;
+        $validator = Validator::make($data, [
+            'query' => 'required|filled|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->failValidation($validator->errors());
+        }
+
+        $user = Auth::user();
+        if ($user) {
+            $categoryRepository->setCountries([$user->country]);
+        }
+        $category = Category::find($categoryId);
+        $tasks = [];
+        if ($category) {
+            $tasks = $categoryRepository->searchByText($category, $query, 10);
+            $filterOptions = $categoryRepository->filterOptions();
+            $tasks = ($tasks->appends(request()->except('page')))->toArray();
+            $tasks['filter_options'] = $filterOptions;
             $tasks['parent_entity'] = [
                 'id' => $category->id,
                 'name' => $category->name

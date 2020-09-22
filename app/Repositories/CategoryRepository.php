@@ -3,15 +3,19 @@
 namespace App\Repositories;
 
 
+use App\Tag;
 use App\Task;
 use App\Country;
 use App\Category;
+use App\Traits\TaskFilterApplier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class CategoryRepository
 {
+    use TaskFilterApplier;
+
     /**
      * @var array $currencies
      */
@@ -21,6 +25,16 @@ class CategoryRepository
      * @var array $countries
      */
     protected $countries = [];
+
+    /**
+     * @var Builder|null $lastQuery
+     */
+    protected $lastQuery = null;
+
+    /**
+     * @var array $filters
+     */
+    protected $filters = [];
 
     /**
      * @param array $currencies
@@ -39,6 +53,16 @@ class CategoryRepository
     public function setCountries(array $countries)
     {
         $this->countries = $countries;
+        return $this;
+    }
+
+    /**
+     * @param array $filters
+     * @return CategoryRepository
+     */
+    public function setFilters(array $filters)
+    {
+        $this->filters = $filters;
         return $this;
     }
 
@@ -82,6 +106,53 @@ class CategoryRepository
         $query = $this->withTaskCurrencies($query);
         $query = $this->withTaskCountries($query);
         $query = $this->includePrices($query);
+
+        $this->lastQuery = $query;
+
+        $query = $this->applyFilters();
+
+        if ($paginate) {
+            return $query->paginate($paginate);
+        } else {
+            return $query->get();
+        }
+    }
+
+    /**
+     * @param Category $category
+     * @param string $text
+     * @param int $paginate
+     * @return LengthAwarePaginator|Builder[]|Collection
+     */
+    public function searchByText(Category $category, string $text, int $paginate = 0)
+    {
+        $descendantIds = $category->getDescendantsIds();
+        $tagIds = $this->searchTextInTags($text);
+        $query = Task::query();
+        $query = $query->whereIn('category_id', $descendantIds)
+            ->with('images')
+            ->where('expires_at', '>', date('Y-m-d'))
+            ->where(function ($task) use ($text, $tagIds) {
+                $task->where('title', 'like', "%$text%")
+                    ->orWhere('store', 'like', "%$text%")
+                    ->orWhere('description', 'like', "%$text%")
+                    ->orWhere('custom_attributes', 'like', "%$text%")
+                    ->orWhereHas('tags', function ($tags) use ($tagIds) {
+                        $tags->whereIn('tag_task.tag_id', $tagIds);
+                    })
+                    ->orWhereHas('category', function ($category) use ($text) {
+                        $category->where('name', 'like', "%$text%");
+                    });
+            })
+            ->with('images');
+        $query = $this->withTaskCurrencies($query);
+        $query = $this->withTaskCountries($query);
+        $query = $this->includePrices($query);
+
+        $this->lastQuery = $query;
+
+        $query = $this->applyFilters();
+
         if ($paginate) {
             return $query->paginate($paginate);
         } else {
@@ -183,5 +254,18 @@ class CategoryRepository
             return $query->with('prices');
         }
         return $query;
+    }
+
+    /**
+     * @param string $text
+     * @return mixed
+     */
+    private function searchTextInTags(string $text)
+    {
+        $tagIds = Tag::where('name', 'like', "%$text%")
+            ->orWhere('display_name', 'like', "%$text%")
+            ->pluck('id')
+            ->toArray();
+        return $tagIds;
     }
 }
