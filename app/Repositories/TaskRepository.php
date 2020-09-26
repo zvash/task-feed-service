@@ -40,7 +40,7 @@ class TaskRepository
 
     /**
      * @param int $taskId
-     * @return Builder[]|\Illuminate\Database\Eloquent\Collection
+     * @return Builder|\Illuminate\Database\Eloquent\Model|object
      */
     public function getTask(int $taskId)
     {
@@ -52,7 +52,7 @@ class TaskRepository
         $query = $this->addTaskCurrenciesWhereClause($query);
         $query = $this->addTaskCountriesWhereClause($query);
         $query = $this->includePrices($query);
-        return $query->get();
+        return $query->first();
     }
 
     /**
