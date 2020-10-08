@@ -142,7 +142,6 @@ trait TaskFilterApplier
         }
         $filterable = $filter->filterable;
         $query = $this->addWhereClauseByRelation($query, $filterable);
-        dd($query->get()->toArray());
         $columnName = $filterable->column;
         $query = $query->select(['id', $columnName]);
         $result = $query->get()->toArray();
@@ -296,6 +295,7 @@ trait TaskFilterApplier
         if ($filterable->relation_to_tasks == 'has_many') {
             $relationColumn = Str::singular($filterable->getAttribute('table')) . '_id';
             $ids = $query->pluck($relationColumn)->toArray();
+            dd($ids);
             try {
                 $modelClass = $filterable->getModelClass();
                 $relationQuery = $modelClass::query();
