@@ -189,7 +189,6 @@ trait TaskFilterApplier
         }
         $result = $query->get()->toArray();
         $option = [];
-        dd($result);
         if ($hasVariations) {
             foreach ($result as $row) {
                 $minValue = $this->roundValue($row[$minColumnName], 'down');
@@ -212,8 +211,8 @@ trait TaskFilterApplier
                 ];
             }
         } else {
+            dd($result);
             foreach ($result as $row) {
-                dd($result);
                 $minValue = $this->roundValue($row[$minColumnName], 'down');
                 $maxValue = $this->roundValue($row[$maxColumnName], 'up');
                 $option = [
