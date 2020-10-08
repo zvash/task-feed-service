@@ -189,6 +189,7 @@ trait TaskFilterApplier
         }
         $result = $query->get()->toArray();
         $option = [];
+        dd($result);
         if ($hasVariations) {
             foreach ($result as $row) {
                 $minValue = $this->roundValue($row[$minColumnName], 'down');
