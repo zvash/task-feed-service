@@ -18,7 +18,6 @@ trait TaskFilterApplier
     public function filterOptions()
     {
         $query = $this->makeQuery($this->lastQuery);
-        dd($query->get()->toArray());
         $filters = Filter::where('is_active', true)->get();
         $options = [];
         foreach ($filters as $filter) {
@@ -143,6 +142,7 @@ trait TaskFilterApplier
         }
         $filterable = $filter->filterable;
         $query = $this->addWhereClauseByRelation($query, $filterable);
+        dd($query->get()->toArray());
         $columnName = $filterable->column;
         $query = $query->select(['id', $columnName]);
         $result = $query->get()->toArray();
