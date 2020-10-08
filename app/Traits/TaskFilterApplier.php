@@ -18,6 +18,7 @@ trait TaskFilterApplier
     public function filterOptions()
     {
         $query = $this->makeQuery($this->lastQuery);
+        dd($query->get()->toArray());
         $filters = Filter::where('is_active', true)->get();
         $options = [];
         foreach ($filters as $filter) {
