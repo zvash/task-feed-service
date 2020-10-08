@@ -149,7 +149,7 @@ class CategoryRepository
         $query = $this->withTaskCountries($query);
         $query = $this->includePrices($query);
 
-        $this->lastQuery = $query;
+        $this->lastQuery = clone $query;
 
         $query = $this->applyFilters();
 
