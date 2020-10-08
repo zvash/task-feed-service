@@ -191,6 +191,9 @@ trait TaskFilterApplier
         $option = [];
         if ($hasVariations) {
             foreach ($result as $row) {
+                if ($row[$minColumnName] === null || $row[$maxColumnName] === null) {
+                    continue;
+                }
                 $minValue = $this->roundValue($row[$minColumnName], 'down');
                 $maxValue = $this->roundValue($row[$maxColumnName], 'up');
                 $option[] = [
@@ -211,8 +214,10 @@ trait TaskFilterApplier
                 ];
             }
         } else {
-            dd($result);
             foreach ($result as $row) {
+                if ($row[$minColumnName] === null || $row[$maxColumnName] === null) {
+                    continue;
+                }
                 $minValue = $this->roundValue($row[$minColumnName], 'down');
                 $maxValue = $this->roundValue($row[$maxColumnName], 'up');
                 $option = [
