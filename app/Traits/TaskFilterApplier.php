@@ -295,7 +295,6 @@ trait TaskFilterApplier
         if ($filterable->relation_to_tasks == 'has_many') {
             $relationColumn = Str::singular($filterable->getAttribute('table')) . '_id';
             $ids = $query->pluck($relationColumn)->toArray();
-            dd($ids);
             try {
                 $modelClass = $filterable->getModelClass();
                 $relationQuery = $modelClass::query();
@@ -312,7 +311,7 @@ trait TaskFilterApplier
                 if ($ids) {
                     return $relationQuery->whereIn('id', $ids);
                 }
-                return $relationQuery;
+                return $relationQuery->where('id', -1);
             } catch (ServiceException $exception) {
 
             }
