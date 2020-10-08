@@ -153,11 +153,13 @@ trait TaskFilterApplier
                 'display_value' => $item[$columnName],
             ];
         }
-        $option = [
-            'filter_name' => $filter->name,
-            'selection_type' => $filter->selection_type,
-            'data' => $data
-        ];
+        if ($data) {
+            $option = [
+                'filter_name' => $filter->name,
+                'selection_type' => $filter->selection_type,
+                'data' => $data
+            ];
+        }
 
         return $option;
     }
@@ -286,8 +288,9 @@ trait TaskFilterApplier
                 }
                 if ($taskIds) {
                     return $relationQuery->whereIn('task_id', $taskIds);
+                } else {
+                    return $relationQuery->where('task_id', -1);
                 }
-                return $relationQuery;
             } catch (ServiceException $exception) {
 
             }
