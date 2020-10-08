@@ -153,6 +153,7 @@ trait TaskFilterApplier
                 'display_value' => $item[$columnName],
             ];
         }
+        $option = [];
         if ($data) {
             $option = [
                 'filter_name' => $filter->name,
