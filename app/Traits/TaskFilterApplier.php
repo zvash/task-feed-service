@@ -313,14 +313,14 @@ trait TaskFilterApplier
                     $relationQuery = $relationQuery->whereIn('country_id', $countryIds);
                 }
                 if ($ids) {
-                    if (method_exists(new $modelClass(), 'getDescendantsIds')) {
-                        $allIds = [];
-                        foreach ($ids as $id) {
-                            $model = $modelClass::find($id);
-                            $allIds = array_merge($allIds, $model->getDescendantsIds());
-                        }
-                        $ids = $allIds;
-                    }
+//                    if (method_exists(new $modelClass(), 'getDescendantsIds')) {
+//                        $allIds = [];
+//                        foreach ($ids as $id) {
+//                            $model = $modelClass::find($id);
+//                            $allIds = array_merge($allIds, $model->getDescendantsIds());
+//                        }
+//                        $ids = $allIds;
+//                    }
                     return $relationQuery->whereIn('id', $ids);
                 }
                 return $relationQuery->where('id', -1);
