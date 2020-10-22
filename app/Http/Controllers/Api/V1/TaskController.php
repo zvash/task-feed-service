@@ -201,7 +201,7 @@ class TaskController extends Controller
             'prices.*.has_shipment' => 'required|boolean',
             'prices.*.shipment_price' => 'numeric|min:0|required_if:prices.*.has_shipment,1',
             'coupon_code' => 'string',
-            'expires_at' => 'date_format:Y-m-d|after:today',
+            'expires_at' => 'date_format:Y-m-d H:i:s|after:today',
             'description' => 'string',
             'destination_url' => 'required|string',
             'coin_reward' => 'required|integer|min:0',
