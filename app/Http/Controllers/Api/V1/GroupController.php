@@ -161,6 +161,11 @@ class GroupController extends Controller
                     $items = [];
                 }
                 $groups['data'][$index][$type] = $items;
+                if ($type == 'tasks') {
+                    $groups['data'][$index]['banners'] = null;
+                } else if ($type == 'banners'){
+                    $groups['data'][$index]['tasks'] = null;
+                }
             }
             return $this->success($groups);
         }

@@ -21,4 +21,14 @@ class Country extends Model
             'shipment_price'
         ]);
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function banners()
+    {
+        return $this->belongsToMany(Banner::class, 'banner_countries')->withPivot([
+            'currency'
+        ]);
+    }
 }

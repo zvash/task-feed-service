@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Banner;
 use App\Task;
 use App\Group;
 use App\Country;
@@ -88,7 +89,12 @@ class GroupRepository
             }
             return $query->get()
                 ->toArray();
-
+        } else if ($group->type == 'banners') {
+            $query = Banner::query();
+            $query = $query->where('group_id', $group->id);
+            $query = $this->addBannerCountriesWhereClause($query);
+            return $query->get()
+                ->toArray();
         }
         return [];
     }
@@ -175,5 +181,29 @@ class GroupRepository
             return $query->with('prices');
         }
         return $query;
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    private function addBannerCountriesWhereClause(Builder $query): Builder
+    {
+        if (!$this->countries) {
+            return $query;
+        }
+        $userCountries = $this->countries;
+
+        $countryIds = Country::whereIn('name', $userCountries)
+            ->orWhereIn('alpha3_name', $userCountries)
+            ->orWhere('name', 'ALL')
+            ->pluck('id')
+            ->toArray();
+
+        return $query->whereHas('countries', function ($countries) use ($countryIds) {
+            return $countries->whereIn('banner_countries.country_id', $countryIds);
+        })->with(['countries' => function ($query) use ($countryIds) {
+            return $query->whereIn('banner_countries.country_id', $countryIds);
+        }]);
     }
 }

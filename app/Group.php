@@ -17,4 +17,12 @@ class Group extends Model
     {
         return $this->belongsToMany(Tag::class, 'group_tags');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function banners()
+    {
+        return $this->hasMany(Banner::class);
+    }
 }

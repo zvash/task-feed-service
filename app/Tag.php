@@ -56,4 +56,12 @@ class Tag extends Model
     {
         return $this->belongsToMany(Group::class, 'group_tags');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function banners()
+    {
+        return $this->belongsToMany(Banner::class, 'banner_tags');
+    }
 }

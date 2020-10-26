@@ -42,6 +42,8 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
         $router->get('filters/actives', 'FilterController@getActives');
 
+        $router->get('banners/{bannerId}/tasks', 'BannerController@getTasks');
+
 
         $router->group(['middleware' => 'auth'], function ($router) {
 
@@ -77,6 +79,11 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
             $router->get('filters/actives', 'FilterController@getActives');
 
             $router->get('filterables/all', 'FilterableController@getAll');
+
+            $router->post('banners/create', 'BannerController@create');
+            $router->post('banners/{bannerId}/tags/reset', 'BannerController@resetTags');
+            $router->post('banners/{bannerId}/tags/add', 'BannerController@addTags');
+            $router->post('banners/{bannerId}/tags/remove', 'BannerController@removeTags');
 
         });
     });
