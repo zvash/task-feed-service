@@ -80,6 +80,7 @@ $app->configure('countries');
 
 $app->middleware([
     Fruitcake\Cors\HandleCors::class,
+    App\Http\Middleware\AttachCountry::class,
 ]);
 
 $app->routeMiddleware([

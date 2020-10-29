@@ -53,6 +53,10 @@ class CategoryController extends Controller
         $user = Auth::user();
         if ($user) {
             $categoryRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $categoryRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
         $categories = $categoryRepository->getSubCategories($parentId);
         if ($categories) {
@@ -76,6 +80,10 @@ class CategoryController extends Controller
         $user = Auth::user();
         if ($user) {
             $categoryRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $categoryRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
         $category = Category::find($categoryId);
         $tasks = [];
@@ -121,6 +129,10 @@ class CategoryController extends Controller
         $user = Auth::user();
         if ($user) {
             $categoryRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $categoryRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
         $category = Category::find($categoryId);
         $tasks = [];
@@ -149,6 +161,10 @@ class CategoryController extends Controller
         $user = Auth::user();
         if ($user) {
             $categoryRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $categoryRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
         $categories = $categoryRepository->getAllMainCategories();
         return $this->success($categories);

@@ -69,6 +69,10 @@ class TaskController extends Controller
         $user = Auth::user();
         if ($user) {
             $taskRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $taskRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
         $task = $taskRepository->getTask($taskId);
         if ($task) {
@@ -170,6 +174,10 @@ class TaskController extends Controller
         $user = Auth::user();
         if ($user) {
             $searchRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $searchRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
 
         $tasks = $searchRepository->searchTasksByText($query, 10);

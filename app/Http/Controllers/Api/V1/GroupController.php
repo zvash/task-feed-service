@@ -123,6 +123,10 @@ class GroupController extends Controller
         $user = Auth::user();
         if ($user) {
             $groupRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $groupRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
         $group = Group::find($groupId);
         if ($group) {
@@ -150,6 +154,10 @@ class GroupController extends Controller
         $user = Auth::user();
         if ($user) {
             $groupRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $groupRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
         $groups = Group::where('is_active', true)->orderBy('order')->paginate(5)->toArray();
         if ($groups) {

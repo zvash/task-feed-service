@@ -129,6 +129,10 @@ class BannerController extends Controller
         $user = Auth::user();
         if ($user) {
             $bannerRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $bannerRepository->setCountries([$request->attributes->get('country', null)]);
+            }
         }
         $banner = Banner::find($bannerId);
         if ($banner) {
