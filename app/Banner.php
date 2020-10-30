@@ -48,4 +48,16 @@ class Banner extends Model
             'currency'
         ]);
     }
+
+    /**
+     * @param $value
+     * @return string
+     */
+    public function getImageAttribute($value)
+    {
+        if ($value) {
+            return rtrim(env('APP_URL'), '/') . '/' . $value;
+        }
+        return $value;
+    }
 }
