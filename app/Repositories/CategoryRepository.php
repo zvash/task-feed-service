@@ -195,12 +195,22 @@ class CategoryRepository
             ->pluck('id')
             ->toArray();
 
-        return $query->whereHas('tasks', function ($query) use ($countryIds) {
-            return $query->where('expires_at', '>', date('Y-m-d'))
-                ->whereHas('prices', function ($prices) use ($countryIds) {
-                    return $prices->whereIn('country_tasks.country_id', $countryIds);
+        return $query->where(function ($query) use ($countryIds) {
+            return $query->whereHas('tasks', function ($query) use ($countryIds) {
+                return $query->where('expires_at', '>', date('Y-m-d'))
+                    ->whereHas('prices', function ($prices) use ($countryIds) {
+                        return $prices->whereIn('country_tasks.country_id', $countryIds);
+                    });
+            })->orWhereHas('children', function ($query) use ($countryIds) {
+                return $query->whereHas('tasks', function ($query) use ($countryIds) {
+                    return $query->where('expires_at', '>', date('Y-m-d'))
+                        ->whereHas('prices', function ($prices) use ($countryIds) {
+                            return $prices->whereIn('country_tasks.country_id', $countryIds);
+                        });
                 });
+            });
         });
+
     }
 
     /**
