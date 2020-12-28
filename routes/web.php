@@ -47,6 +47,7 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
         $router->group(['middleware' => 'auth'], function ($router) {
 
+            $router->get('tasks/history', 'TaskController@history');
             $router->get('tasks/{taskId}/landing', 'TaskController@getLandingUrl');
 
         });

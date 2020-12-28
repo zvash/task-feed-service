@@ -108,6 +108,18 @@ class TaskController extends Controller
 
     }
 
+    public function history(Request $request, AffiliateService $affiliateService)
+    {
+        $user = Auth::user();
+        if ($user) {
+            $page = $request->exists('page') ? $request->get('page') : 1;
+            $userId = $user->id;
+            $response = $affiliateService->getClicks($userId, $page);
+            dd($response);
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
+
     /**
      * @param Request $request
      * @param int $taskId

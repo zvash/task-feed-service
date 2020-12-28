@@ -69,11 +69,40 @@ class AffiliateService
         }
     }
 
+    public function getClicks(int $userId, int $page = 1)
+    {
+        try {
+            $response = $this->client->request(
+                'GET',
+                $this->getAllClicksUrl($userId, $page),
+                [
+                    'headers' => $this->headers
+                ]
+            );
+            if ($response->getStatusCode() == 200) {
+                $contents = json_decode($response->getBody()->getContents(), 1);
+                return ['data' => $contents['data'], 'status' => 200];
+            }
+        } catch (GuzzleException $exception) {
+            return ['data' => $exception->getResponse()->getBody()->getContents(), 'status' => $exception->getCode()];
+        }
+    }
+
     /**
      * @return string
      */
     private function getRegisterClickUrl()
     {
         return 'api/v1/clicks/create';
+    }
+
+    /**
+     * @param int $userId
+     * @param int $page
+     * @return string
+     */
+    private function getAllClicksUrl(int $userId, int $page = 1)
+    {
+        return "api/v1/clicks/all?user_id={$userId}&page={$page}";
     }
 }
