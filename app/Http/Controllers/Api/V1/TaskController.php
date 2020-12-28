@@ -108,6 +108,11 @@ class TaskController extends Controller
 
     }
 
+    /**
+     * @param Request $request
+     * @param AffiliateService $affiliateService
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
     public function history(Request $request, AffiliateService $affiliateService)
     {
         $user = Auth::user();
@@ -115,7 +120,35 @@ class TaskController extends Controller
             $page = $request->exists('page') ? $request->get('page') : 1;
             $userId = $user->id;
             $response = $affiliateService->getClicks($userId, $page);
-            dd($response);
+            if ($response['status'] == 200) {
+                $data = $response['data']['data'];
+                $taskData = [];
+                foreach ($data as $item) {
+                    $task = Task::find($item['task_id']);
+                    if ($task) {
+                        $affiliateItem = [
+                            'click_id' => $item['id'],
+                            'title' => $task->title,
+                            'coins' => $task->coin_reward,
+                            'date' => $item['created_at'],
+                            'status' => $item['returned_amount'] === null ? 'claimable' : 'received'
+                        ];
+                    } else {
+                        $affiliateItem = [
+                            'click_id' => $item['id'],
+                            'title' => 'Deleted Task',
+                            'coins' => 0,
+                            'date' => $item['created_at'],
+                            'status' => $item['returned_amount'] === null ? 'claimable' : 'received'
+                        ];
+                    }
+                    $taskData[] = $affiliateItem;
+                }
+                $taskHistory = $response['data'];
+                $taskHistory['data'] = $taskData;
+                return $this->success($taskHistory);
+            }
+            return $this->failMessage('Something went wrong in affiliate service', 400);
         }
         return $this->failMessage('Content not found.', 404);
     }
