@@ -146,6 +146,10 @@ class TaskController extends Controller
                 }
                 $taskHistory = $response['data'];
                 $taskHistory['data'] = $taskData;
+                $taskHistory['first_page_url'] = $this->replacePaginationUrlForHistory($taskHistory['first_page_url']);
+                $taskHistory['last_page_url'] = $this->replacePaginationUrlForHistory($taskHistory['last_page_url']);
+                $taskHistory['next_page_url'] = $this->replacePaginationUrlForHistory($taskHistory['next_page_url']);
+                $taskHistory['path'] = $this->replacePaginationUrlForHistory($taskHistory['path']);
                 return $this->success($taskHistory);
             }
             return $this->failMessage('Something went wrong in affiliate service', 400);
@@ -338,5 +342,19 @@ class TaskController extends Controller
                 TaskImage::create($taskImage);
             }
         }
+    }
+
+    /**
+     * @param string $currentUrl
+     * @return string
+     */
+    private function replacePaginationUrlForHistory(string $currentUrl)
+    {
+        $serviceUrl = rtrim(env('APP_URL'), '/');
+        $currentUrlParts = explode('?', $currentUrl);
+        if (isset($currentUrlParts[1])) {
+            return "$serviceUrl/api/v1/tasks/history?{$currentUrlParts[1]}";
+        }
+        return "$serviceUrl/api/v1/tasks/history";
     }
 }
