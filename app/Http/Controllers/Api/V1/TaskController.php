@@ -149,6 +149,7 @@ class TaskController extends Controller
                 $taskHistory['first_page_url'] = $this->replacePaginationUrlForHistory($taskHistory['first_page_url']);
                 $taskHistory['last_page_url'] = $this->replacePaginationUrlForHistory($taskHistory['last_page_url']);
                 $taskHistory['next_page_url'] = $this->replacePaginationUrlForHistory($taskHistory['next_page_url']);
+                $taskHistory['prev_page_url'] = $this->replacePaginationUrlForHistory($taskHistory['prev_page_url']);
                 $taskHistory['path'] = $this->replacePaginationUrlForHistory($taskHistory['path']);
                 return $this->success($taskHistory);
             }
@@ -345,11 +346,14 @@ class TaskController extends Controller
     }
 
     /**
-     * @param string $currentUrl
-     * @return string
+     * @param null|string $currentUrl
+     * @return null|string
      */
-    private function replacePaginationUrlForHistory(string $currentUrl)
+    private function replacePaginationUrlForHistory(?string $currentUrl)
     {
+        if (!$currentUrl) {
+            return null;
+        }
         $serviceUrl = rtrim(env('APP_URL'), '/');
         $currentUrlParts = explode('?', $currentUrl);
         if (isset($currentUrlParts[1])) {
