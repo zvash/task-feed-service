@@ -69,6 +69,11 @@ class AffiliateService
         }
     }
 
+    /**
+     * @param int $userId
+     * @param int $page
+     * @return array
+     */
     public function getClicks(int $userId, int $page = 1)
     {
         try {
@@ -76,6 +81,31 @@ class AffiliateService
                 'GET',
                 $this->getAllClicksUrl($userId, $page),
                 [
+                    'headers' => $this->headers
+                ]
+            );
+            if ($response->getStatusCode() == 200) {
+                $contents = json_decode($response->getBody()->getContents(), 1);
+                return ['data' => $contents['data'], 'status' => 200];
+            }
+        } catch (GuzzleException $exception) {
+            return ['data' => $exception->getResponse()->getBody()->getContents(), 'status' => $exception->getCode()];
+        }
+    }
+
+    public function claim(int $clickId, int $userId)
+    {
+        $payload = [
+            'click_id' => $clickId,
+            'user_id' => $userId,
+        ];
+
+        try {
+            $response = $this->client->request(
+                'POST',
+                $this->getClaimUrl(),
+                [
+                    'json' => $payload,
                     'headers' => $this->headers
                 ]
             );
@@ -104,5 +134,13 @@ class AffiliateService
     private function getAllClicksUrl(int $userId, int $page = 1)
     {
         return "api/v1/clicks/all?user_id={$userId}&page={$page}";
+    }
+
+    /**
+     * @return string
+     */
+    private function getClaimUrl()
+    {
+        return 'api/v1/clicks/claim';
     }
 }

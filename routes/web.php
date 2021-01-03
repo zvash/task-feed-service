@@ -50,6 +50,8 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
             $router->get('tasks/history', 'TaskController@history');
             $router->get('tasks/{taskId}/landing', 'TaskController@getLandingUrl');
 
+            $router->get('tasks/{clickId}/claim', 'TaskController@claim');
+
         });
 
 

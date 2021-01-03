@@ -160,6 +160,45 @@ class TaskController extends Controller
 
     /**
      * @param Request $request
+     * @param int $clickId
+     * @param AffiliateService $affiliateService
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function claim(Request $request, int $clickId, AffiliateService $affiliateService)
+    {
+        $user = Auth::user();
+        if ($user) {
+            $userId = $user->id;
+            $response = $affiliateService->claim($clickId, $userId);
+            if ($response['status'] == 200) {
+                $taskId = $response['data']['task_id'];
+                if ($taskId) {
+                    $task = Task::find($taskId);
+                    if ($task) {
+                        return $this->success([
+                            'successful_claim' => true,
+                            'reward' => $task->coin_reward
+                        ]);
+                    } else {
+                        return $this->success([
+                            'successful_claim' => false,
+                            'coin_reward' => 0
+                        ]);
+                    }
+                } else {
+                    return $this->success([
+                        'successful_claim' => false,
+                        'coin_reward' => 0
+                    ]);
+                }
+            }
+            return $this->failMessage('Something went wrong in affiliate service', 400);
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
+
+    /**
+     * @param Request $request
      * @param int $taskId
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
