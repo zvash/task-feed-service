@@ -43,7 +43,7 @@ class CountryTask extends Model
     public function getDiscountAttribute()
     {
         if ($this->original_price > 0) {
-            return 100 - intval(round($this->payable_price / $this->original_price)) * 100;
+            return 100 - intval(round(100 * $this->payable_price / $this->original_price));
         }
         return 0;
     }
