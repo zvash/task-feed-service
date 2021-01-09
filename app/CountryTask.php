@@ -11,7 +11,7 @@ class CountryTask extends Model
 {
     protected $table = 'country_tasks';
 
-    protected $appends = ['country_name'];
+    protected $appends = ['country_name', 'discount'];
 
     protected $hidden = ['created_at', 'updated_at'];
 
@@ -35,5 +35,16 @@ class CountryTask extends Model
         }
         $country = Country::find($this->country_id);
         return $country->name;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDiscountAttribute()
+    {
+        if ($this->original_price > 0) {
+            return 100 - intval(round($this->payable_price / $this->original_price)) * 100;
+        }
+        return 0;
     }
 }
