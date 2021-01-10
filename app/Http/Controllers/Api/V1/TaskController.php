@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Repositories\SearchRepository;
 use App\Repositories\TaskRepository;
+use App\Services\AuthService;
 use App\Tag;
 use App\Task;
 use App\Country;
 use App\TaskImage;
+use App\User;
 use Illuminate\Http\Request;
 use App\Traits\ResponseMaker;
 use App\Services\AffiliateService;
@@ -94,7 +96,8 @@ class TaskController extends Controller
         if ($user) {
             $task = Task::find($taskId);
             if ($task) {
-                $response = $affiliateService->registerClick($task->id, $user->id, $task->offer_id);
+                //$response = $affiliateService->registerClick($task->id, $user->id, $task->offer_id);
+                $response = $affiliateService->registerClaim($user->id, 'tasks', $task->id, $task->coin_reward, $task->offer_id);
                 if ($response['status'] == 200) {
                     $parameter = $response['data']['query_param'];
                     $url = add_query_param_to_url($task->destination_url, $parameter);
@@ -111,35 +114,66 @@ class TaskController extends Controller
     /**
      * @param Request $request
      * @param AffiliateService $affiliateService
+     * @param AuthService $authService
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
-    public function history(Request $request, AffiliateService $affiliateService)
+    public function history(Request $request, AffiliateService $affiliateService, AuthService $authService)
     {
         $user = Auth::user();
         if ($user) {
             $page = $request->exists('page') ? $request->get('page') : 1;
             $userId = $user->id;
-            $response = $affiliateService->getClicks($userId, $page);
+            $response = $affiliateService->getClaims($userId, $page);
             if ($response['status'] == 200) {
                 $data = $response['data']['data'];
                 $taskData = [];
                 foreach ($data as $item) {
-                    $task = Task::find($item['task_id']);
-                    if ($task) {
-                        $affiliateItem = [
-                            'click_id' => $item['id'],
-                            'title' => $task->title,
-                            'coins' => $task->coin_reward,
-                            'date' => $item['created_at'],
-                            'status' => $item['returned_amount'] === null ? 'claimable' : 'received'
-                        ];
+                    if ($item['claimable_type'] == 'tasks') {
+                        $task = Task::find($item['claimable_id']);
+                        if ($task) {
+                            $affiliateItem = [
+                                'claim_id' => $item['token'],
+                                'title' => $task->title,
+                                'coins' => $item['coin_reward'],
+                                'date' => $item['created_at'],
+                                'status' => $item['claimed_at'] ? 'received' : 'claimable'
+                            ];
+                        } else {
+                            $affiliateItem = [
+                                'claim_id' => $item['token'],
+                                'title' => 'Deleted Task',
+                                'coins' => $item['coin_reward'],
+                                'date' => $item['created_at'],
+                                'status' => $item['claimed_at'] ? 'received' : 'claimable'
+                            ];
+                        }
+                    } else if ($item['claimable_type'] == 'referrals') {
+                        $userData = $authService->getUserById($userId);
+                        if ($userData['status'] == 200) {
+                            $referringUser = $userData['data'];
+                            $affiliateItem = [
+                                'claim_id' => $item['token'],
+                                'title' => "Referral Coins of {$referringUser['masked_phone']}",
+                                'coins' => $item['coin_reward'],
+                                'date' => $item['created_at'],
+                                'status' => $item['claimed_at'] ? 'received' : 'claimable'
+                            ];
+                        } else {
+                            $affiliateItem = [
+                                'claim_id' => $item['token'],
+                                'title' => "Referral Coins of Unknown User",
+                                'coins' => $item['coin_reward'],
+                                'date' => $item['created_at'],
+                                'status' => $item['claimed_at'] ? 'received' : 'claimable'
+                            ];
+                        }
                     } else {
                         $affiliateItem = [
-                            'click_id' => $item['id'],
-                            'title' => 'Deleted Task',
+                            'claim_id' => $item['token'],
+                            'title' => "Unknown Claimable",
                             'coins' => 0,
                             'date' => $item['created_at'],
-                            'status' => $item['returned_amount'] === null ? 'claimable' : 'received'
+                            'status' => $item['claimed_at'] ? 'received' : 'claimable'
                         ];
                     }
                     $taskData[] = $affiliateItem;
@@ -195,6 +229,65 @@ class TaskController extends Controller
             return $this->failMessage('Something went wrong in affiliate service', 400);
         }
         return $this->failMessage('Content not found.', 404);
+    }
+
+    public function claimByToken(Request $request, AffiliateService $affiliateService, AuthService $authService)
+    {
+        $validator = Validator::make($request->all(), [
+            'claim_id' => 'required|string|filled',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->failValidation($validator->errors());
+        }
+
+        $user = Auth::user();
+        $claimId = $request->get('claim_id');
+        if ($user) {
+            $userId = $user->id;
+            try {
+                $claim = $this->getClaim($claimId, $userId, $affiliateService);
+                return $this->handleClaim($claim);
+            } catch (\Exception $exception) {
+                return $this->success([
+                    'successful_claim' => false,
+                    'reward' => 0
+                ]);
+            }
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
+
+    /**
+     * @param string $token
+     * @param int $userId
+     * @param AffiliateService $affiliateService
+     * @return mixed
+     * @throws \Exception
+     */
+    private function getClaim(string $token, int $userId, AffiliateService $affiliateService)
+    {
+        $response = $affiliateService->claimByToken($token, $userId);
+        if ($response['status'] == 200) {
+            $claim = $response['data'];
+            if (!$claim) {
+                throw new \Exception('Something went wrong in affiliate service', 400);
+            }
+            return $claim;
+        }
+        throw new \Exception('Something went wrong in affiliate service', 400);
+    }
+
+    /**
+     * @param array $claim
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    private function handleClaim(array $claim)
+    {
+        return $this->success([
+            'successful_claim' => true,
+            'reward' => $claim['coin_reward']
+        ]);
     }
 
     /**
