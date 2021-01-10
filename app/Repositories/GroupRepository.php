@@ -2,11 +2,13 @@
 
 namespace App\Repositories;
 
-use App\Banner;
+use App\Tag;
 use App\Task;
 use App\Group;
+use App\Banner;
 use App\Country;
 use App\TagTask;
+use App\Traits\TaskFilterApplier;
 use Illuminate\Database\Eloquent\Builder;
 use App\Exceptions\GroupNotFoundException;
 use Illuminate\Database\Eloquent\Collection;
@@ -14,6 +16,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class GroupRepository
 {
+    use TaskFilterApplier;
 
     /**
      * @var array $currencies
@@ -24,6 +27,16 @@ class GroupRepository
      * @var array $countries
      */
     protected $countries = [];
+
+    /**
+     * @var Builder|null $lastQuery
+     */
+    protected $lastQuery = null;
+
+    /**
+     * @var array $filters
+     */
+    protected $filters = [];
 
     /**
      * @param array $currencies
@@ -42,6 +55,16 @@ class GroupRepository
     public function setCountries(array $countries)
     {
         $this->countries = $countries;
+        return $this;
+    }
+
+    /**
+     * @param array $filters
+     * @return GroupRepository
+     */
+    public function setFilters(array $filters)
+    {
+        $this->filters = $filters;
         return $this;
     }
 
@@ -131,6 +154,47 @@ class GroupRepository
     }
 
     /**
+     * @param Group $group
+     * @param string $text
+     * @param int $paginate
+     * @return LengthAwarePaginator|Builder[]|Collection
+     */
+    public function searchByText(Group $group, string $text, int $paginate = 0)
+    {
+        $tagIds = $group->tags->pluck('id')->toArray();
+        $query = Task::query();
+        $query = $query->where('expires_at', '>', date('Y-m-d'))
+            ->where(function ($task) use ($text, $tagIds) {
+                $task->whereHas('tags', function ($tags) use ($tagIds) {
+                    $tags->whereIn('tag_task.tag_id', $tagIds);
+                })->where(function ($query) use ($text) {
+                    return $query->where('title', 'like', "%$text%")
+                        ->orWhere('store', 'like', "%$text%")
+                        ->orWhere('description', 'like', "%$text%")
+                        ->orWhere('custom_attributes', 'like', "%$text%")
+                        ->orWhereHas('category', function ($category) use ($text) {
+                            $category->where('name', 'like', "%$text%");
+                        });
+                });
+
+            })
+            ->with('images');
+        $query = $this->withTaskCurrencies($query);
+        $query = $this->withTaskCountries($query);
+        $query = $this->includePrices($query);
+
+        $this->lastQuery = clone $query;
+
+        $query = $this->applyFilters();
+
+        if ($paginate) {
+            return $query->paginate($paginate);
+        } else {
+            return $query->get();
+        }
+    }
+
+    /**
      * @param Builder $query
      * @return Builder
      */
@@ -205,5 +269,46 @@ class GroupRepository
         })->with(['countries' => function ($query) use ($countryIds) {
             return $query->whereIn('banner_countries.country_id', $countryIds);
         }]);
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    private function withTaskCurrencies(Builder $query): Builder
+    {
+        if (!$this->currencies) {
+            return $query;
+        }
+        $userCurrencies = $this->currencies;
+        return $query->whereHas('prices', function ($prices) use ($userCurrencies) {
+            return $prices->whereIn('country_tasks.currency', $userCurrencies);
+        })->with(['prices' => function ($query) use ($userCurrencies) {
+            return $query->whereIn('country_tasks.currency', $userCurrencies);
+        }]);
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    private function withTaskCountries(Builder $query): Builder
+    {
+        if (!$this->countries) {
+            return $query;
+        }
+        $userCountries = $this->countries;
+
+        $countryIds = Country::whereIn('name', $userCountries)
+            ->orWhereIn('alpha3_name', $userCountries)
+            ->orWhere('name', 'ALL')
+            ->pluck('id')
+            ->toArray();
+
+        return $query->whereHas('prices', function ($prices) use ($countryIds) {
+            return $prices->whereIn('country_tasks.country_id', $countryIds);
+        })->with(['prices' => function ($query) use ($countryIds) {
+            return $query->whereIn('country_tasks.country_id', $countryIds);
+        }]);;
     }
 }

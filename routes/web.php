@@ -36,6 +36,8 @@ $router->group(['prefix' => 'api/v1'], function ($router) {
 
         $router->get('groups/{groupId}/items', 'GroupController@getItems');
 
+        $router->get('groups/{groupId}/search', 'GroupController@search');
+
         $router->get('tasks/{taskId}/get', 'TaskController@get');
 
         $router->get('tasks/search', 'TaskController@searchByText');

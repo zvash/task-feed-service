@@ -201,4 +201,53 @@ class GroupController extends Controller
         }
         return $this->failMessage('Content not found.', 404);
     }
+
+    /**
+     * @param Request $request
+     * @param int $groupId
+     * @param GroupRepository $groupRepository
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function search(Request $request, int $groupId, GroupRepository $groupRepository)
+    {
+        if ($request->has('filters')) {
+            $filters = $request->get('filters');
+            $groupRepository->setFilters($filters);
+        }
+
+        $q = $request->get('q');
+        $query = urldecode($q);
+        $data['query'] = $query;
+        $validator = Validator::make($data, [
+            'query' => 'required|filled|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->failValidation($validator->errors());
+        }
+
+        $user = Auth::user();
+        if ($user) {
+            $groupRepository->setCountries([$user->country]);
+        } else {
+            if ($request->attributes->get('country', null)) {
+                $groupRepository->setCountries([$request->attributes->get('country', null)]);
+            }
+        }
+        $group = Group::find($groupId);
+        $tasks = [];
+        if ($group) {
+            $tasks = $groupRepository->searchByText($group, $query, 10);
+            $filterOptions = $groupRepository->filterOptions();
+            $tasks = ($tasks->appends(request()->except('page')))->toArray();
+            $tasks['filter_options'] = $filterOptions;
+            $tasks['parent_entity'] = [
+                'id' => $group->id,
+                'name' => $group->name
+            ];
+
+            return $this->success($tasks);
+        }
+        return $this->failMessage('Content not found.', 404);
+    }
 }
