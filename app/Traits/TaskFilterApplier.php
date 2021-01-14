@@ -66,6 +66,7 @@ trait TaskFilterApplier
                 }
                 return $query;
             } else {
+                $filterValues = Task::whereIn('id', $filterValues)->pluck($filterable->column)->toArray();
                 return $query->whereIn($filterable->column, $filterValues);
             }
 
