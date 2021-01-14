@@ -17,7 +17,7 @@ class Task extends Model
         'coupon_code',
         'expires_at',
         'description',
-        'ç',
+        'coin_reward',
         'custom_attributes',
         'store',
         'image',
