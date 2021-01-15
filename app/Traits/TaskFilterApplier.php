@@ -230,12 +230,12 @@ trait TaskFilterApplier
                     'data' => [
                         [
                             'key' => "filters[{$filter->name}][min]",
-                            'value' => '',
+                            'value' => $minValue,
                             'display_value' => $minValue,
                         ],
                         [
                             'key' => "filters[{$filter->name}][max]",
-                            'value' => '',
+                            'value' => $maxValue,
                             'display_value' => $maxValue,
                         ],
                     ]
