@@ -62,7 +62,7 @@ trait TaskFilterApplier
                     $query = $query->where($filterable->column, '>=', $filterValues['min']);
                 }
                 if (array_key_exists('max', $filterValues)) {
-                    $query = $query->where($filterable->column, '<=', $filterValues['min']);
+                    $query = $query->where($filterable->column, '<=', $filterValues['max']);
                 }
                 return $query;
             } else {
