@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Repositories\SearchRepository;
 use App\Repositories\TaskRepository;
 use App\Services\AuthService;
+use App\Services\BillingService;
 use App\Tag;
 use App\Task;
 use App\Country;
@@ -231,7 +232,13 @@ class TaskController extends Controller
         return $this->failMessage('Content not found.', 404);
     }
 
-    public function claimByToken(Request $request, AffiliateService $affiliateService, AuthService $authService)
+    /**
+     * @param Request $request
+     * @param AffiliateService $affiliateService
+     * @param BillingService $billingService
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function claimByToken(Request $request, AffiliateService $affiliateService, BillingService $billingService)
     {
         $validator = Validator::make($request->all(), [
             'claim_id' => 'required|string|filled',
@@ -247,7 +254,7 @@ class TaskController extends Controller
             $userId = $user->id;
             try {
                 $claim = $this->getClaim($claimId, $userId, $affiliateService);
-                return $this->handleClaim($claim);
+                return $this->handleClaim($claim, $billingService);
             } catch (\Exception $exception) {
                 return $this->success([
                     'successful_claim' => false,
@@ -280,10 +287,13 @@ class TaskController extends Controller
 
     /**
      * @param array $claim
+     * @param BillingService $billingService
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
-    private function handleClaim(array $claim)
+    private function handleClaim(array $claim, BillingService $billingService)
     {
+        $transactions = [$billingService->depositCoin($claim['user_id'], $claim['coin_reward'], $claim['claimable_type'], $claim['claimable_id'])];
+        $billingService->createTransactions($transactions);
         return $this->success([
             'successful_claim' => true,
             'reward' => $claim['coin_reward']
