@@ -259,7 +259,8 @@ class TaskController extends Controller
             } catch (\Exception $exception) {
                 return $this->success([
                     'successful_claim' => false,
-                    'reward' => 0
+                    'reward' => 0,
+                    'message' => $exception->getMessage()
                 ]);
             }
         }
@@ -283,7 +284,7 @@ class TaskController extends Controller
             }
             return $claim;
         }
-        throw new \Exception('Something went wrong in affiliate service', 400);
+        throw new \Exception($response['data'], 400);
     }
 
     /**
@@ -299,7 +300,8 @@ class TaskController extends Controller
         $authService->taskCompleted($claim['user_id']);
         return $this->success([
             'successful_claim' => true,
-            'reward' => $claim['coin_reward']
+            'reward' => $claim['coin_reward'],
+            'message' => 'ok'
         ]);
     }
 
