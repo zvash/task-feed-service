@@ -149,7 +149,7 @@ class TaskController extends Controller
                             ];
                         }
                     } else if ($item['claimable_type'] == 'referrals') {
-                        $userData = $authService->getUserById($userId);
+                        $userData = $authService->getUserById($item['claimable_id']);
                         if ($userData['status'] == 200) {
                             $referringUser = $userData['data'];
                             $affiliateItem = [
