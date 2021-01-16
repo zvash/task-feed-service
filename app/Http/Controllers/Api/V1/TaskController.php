@@ -236,9 +236,10 @@ class TaskController extends Controller
      * @param Request $request
      * @param AffiliateService $affiliateService
      * @param BillingService $billingService
+     * @param AuthService $authService
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
-    public function claimByToken(Request $request, AffiliateService $affiliateService, BillingService $billingService)
+    public function claimByToken(Request $request, AffiliateService $affiliateService, BillingService $billingService, AuthService $authService)
     {
         $validator = Validator::make($request->all(), [
             'claim_id' => 'required|string|filled',
@@ -254,7 +255,7 @@ class TaskController extends Controller
             $userId = $user->id;
             try {
                 $claim = $this->getClaim($claimId, $userId, $affiliateService);
-                return $this->handleClaim($claim, $billingService);
+                return $this->handleClaim($claim, $billingService, $authService);
             } catch (\Exception $exception) {
                 return $this->success([
                     'successful_claim' => false,
@@ -288,12 +289,14 @@ class TaskController extends Controller
     /**
      * @param array $claim
      * @param BillingService $billingService
+     * @param AuthService $authService
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
      */
-    private function handleClaim(array $claim, BillingService $billingService)
+    private function handleClaim(array $claim, BillingService $billingService, AuthService $authService)
     {
         $transactions = [$billingService->depositCoin($claim['user_id'], $claim['coin_reward'], $claim['claimable_type'], $claim['claimable_id'])];
         $billingService->createTransactions($transactions);
+        $authService->taskCompleted($claim['user_id']);
         return $this->success([
             'successful_claim' => true,
             'reward' => $claim['coin_reward']

@@ -109,6 +109,30 @@ class AuthService
     }
 
     /**
+     * @param int $userId
+     * @return array
+     */
+    public function taskCompleted(int $userId)
+    {
+        $headers = $this->headers + ['Service-Token' => env('AUTH_SERVICE_TOKEN', '')];
+        try {
+            $response = $this->client->request(
+                'POST',
+                $this->getCompleteTaskUrl($userId),
+                [
+                    'headers' => $headers
+                ]
+            );
+            if ($response->getStatusCode() == 200) {
+                $contents = json_decode($response->getBody()->getContents(), 1);
+                return ['data' => $contents['data'], 'status' => 200];
+            }
+        } catch (GuzzleException $exception) {
+            return ['data' => $exception->getResponse()->getBody()->getContents(), 'status' => $exception->getCode()];
+        }
+    }
+
+    /**
      * @param Request $request
      * @return mixed
      */
@@ -154,5 +178,14 @@ class AuthService
     private function getReferCoinsUrl()
     {
         return "api/v1/configs/refer-coins-amount";
+    }
+
+    /**
+     * @param int $userId
+     * @return string
+     */
+    private function getCompleteTaskUrl(int $userId)
+    {
+        return "api/v1/users/{$userId}/complete-task";
     }
 }
