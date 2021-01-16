@@ -206,7 +206,8 @@ class AffiliateService
                 return ['data' => $contents['data'], 'status' => 200];
             }
         } catch (GuzzleException $exception) {
-            return ['data' => $exception->getResponse()->getBody()->getContents(), 'status' => $exception->getCode()];
+            $data =  json_decode($exception->getResponse()->getBody()->getContents(), 1);
+            return ['data' => $data['errors']['message'], 'status' => $exception->getCode()];
         }
     }
 
