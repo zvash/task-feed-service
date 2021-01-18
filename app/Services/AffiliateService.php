@@ -32,7 +32,7 @@ class AffiliateService
         $this->client = new Client(
             [
                 'base_uri' => $baseUrl,
-                'timeout' => config('timeout', 5)
+                'timeout' => config('timeout', 30)
             ]
         );
     }
