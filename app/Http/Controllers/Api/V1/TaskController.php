@@ -259,7 +259,8 @@ class TaskController extends Controller
             } catch (\Exception $exception) {
                 $message = $exception->getMessage();
                 if (substr($message, 0, strlen('task-not-done')) === 'task-not-done') {
-                    $taskId = end(explode('-', $message));
+                    $parts = explode('-', $message);
+                    $taskId = end($parts);
                     $task = Task::find($taskId);
                     if ($task) {
                         $message = $task->title . ' task has not been accomplished. Please Complete the tasks and hit Claim.';
