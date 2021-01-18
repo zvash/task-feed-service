@@ -257,10 +257,20 @@ class TaskController extends Controller
                 $claim = $this->getClaim($claimId, $userId, $affiliateService);
                 return $this->handleClaim($claim, $billingService, $authService);
             } catch (\Exception $exception) {
+                $message = $exception->getMessage();
+                if (substr($message, 0, strlen('task-not-done')) === 'task-not-done') {
+                    $taskId = end(explode('-', $message));
+                    $task = Task::find($taskId);
+                    if ($task) {
+                        $message = $task->title . ' task has not been accomplished. Please Complete the tasks and hit Claim.';
+                    } else {
+                        $message = 'Task has not been accomplished. Please Complete the tasks and hit Claim.';
+                    }
+                }
                 return $this->success([
                     'successful_claim' => false,
                     'reward' => 0,
-                    'message' => $exception->getMessage()
+                    'message' => $message
                 ]);
             }
         }
