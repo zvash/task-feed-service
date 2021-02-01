@@ -24,6 +24,10 @@ class Task extends Model
         'token',
     ];
 
+    protected $appends = [
+        'ordered_custom_attributes'
+    ];
+
     protected $hidden = ['created_at', 'updated_at'];
 
     /**
@@ -104,5 +108,24 @@ class Task extends Model
             return $value;
         }
         return json_decode($value);
+    }
+
+    /**
+     * @return array|mixed
+     */
+    public function getOrderedCustomAttributesAttribute()
+    {
+        $attributes = $this->custom_attributes;
+        if ($attributes) {
+            $orderedAttributes = [];
+            foreach ($attributes as $key => $value) {
+                $orderedAttributes[] = [
+                    'key' => $key,
+                    'value' => $value
+                ];
+            }
+            return $orderedAttributes;
+        }
+        return $attributes;
     }
 }
